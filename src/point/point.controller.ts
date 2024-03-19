@@ -1,7 +1,7 @@
 import { BadRequestException, Body, Controller, Get, NotFoundException, Param, Patch, ValidationPipe } from "@nestjs/common";
 import { PointHistory, TransactionType, UserPoint } from "./point.model";
-import { UserPointTable } from "src/database/userpoint.table";
-import { PointHistoryTable } from "src/database/pointhistory.table";
+import { UserPointTable } from "../database/userpoint.table";
+import { PointHistoryTable } from "../database/pointhistory.table";
 import { PointBody as PointDto } from "./point.dto";
 import { NotFoundError } from "rxjs";
 
@@ -60,6 +60,9 @@ export class PointController {
             throw new NotFoundException(`User ID ${userId} not found`)
         }
         const sumPoint = userPoint.point + amount
+        if (amount>=10000000) {
+            throw new BadRequestException(`Point number is too high`)
+        }
         await this.userDb.insertOrUpdate(userId, sumPoint)
         await this.historyDb.insert(userId, amount, TransactionType.CHARGE , Date.now())
         return { id: userId, point: sumPoint, updateMillis: Date.now() }
