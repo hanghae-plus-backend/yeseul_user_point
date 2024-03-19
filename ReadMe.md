@@ -1,7 +1,7 @@
 ## 디렉토리 구조
 src
-├── app.controller.spec.ts
-├── app.controller.ts
+├── app.controller.spec.ts   
+├── app.controller.ts    
 ├── app.module.ts
 ├── app.service.ts
 ├── database
