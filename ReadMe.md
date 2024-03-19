@@ -1,19 +1,19 @@
 ## 디렉토리 구조
-src
+src    
 ├── app.controller.spec.ts   
 ├── app.controller.ts    
-├── app.module.ts
-├── app.service.ts
-├── database
-│   ├── database.module.ts
-│   ├── pointhistory.table.ts
-│   └── userpoint.table.ts
-├── main.ts
-└── point
-    ├── point.controller.ts
-    ├── point.dto.ts
-    ├── point.model.ts
-    └── point.module.ts
+├── app.module.ts  
+├── app.service.ts  
+├── database  
+│   ├── database.module.ts  
+│   ├── pointhistory.table.ts  
+│   └── userpoint.table.ts  
+├── main.ts  
+└── point  
+    ├── point.controller.ts  
+    ├── point.dto.ts  
+    ├── point.model.ts  
+    └── point.module.ts  
 
 
 ## 엔티티와 모듈 구성
