@@ -86,7 +86,7 @@ export class PointController {
         }
         let sumPoint = userPoint.point - amount
         if (sumPoint<0) {
-            sumPoint = 0 
+            throw new BadRequestException(`Insufficient points`)
         }
         await this.userDb.insertOrUpdate(userId, sumPoint)
         await this.historyDb.insert(userId, -amount, TransactionType.USE , Date.now())

@@ -64,4 +64,33 @@ describe('PointController (e2e)', () => {
         .expect(400)
   })
 
+  it('/point/:id/use (PATCH) - 인풋값이 음수인 경우 BadRequestException', () => {
+    return request(app.getHttpServer())
+        .patch('/point/1/use')
+        .send({amount: -50})
+        .expect(400)
+        .expect({ 
+            statusCode: 400,
+            message: "Negetive number input not allowed",
+            error: "Bad Request"
+          })
+  })
+
+  it('/point/:id/use (PATCH) - 가지고 있는 포인트보다 많은 값을 사용하려는 경우', () => {
+    const excessiveAmount = 1000000; 
+
+    return request(app.getHttpServer())
+      .patch('/point/1/use')
+      .send({ amount: excessiveAmount })
+      .expect(400)
+      .expect({ 
+        statusCode: 400,
+        message: "Insufficient points",
+        error: "Bad Request"
+      })
+  })
+
+  afterAll(async () => {
+    await app.close()
+  })
 })
