@@ -1,12 +1,26 @@
 ## 디렉토리 구조
-
+src
+├── app.controller.spec.ts
+├── app.controller.ts
+├── app.module.ts
+├── app.service.ts
+├── database
+│   ├── database.module.ts
+│   ├── pointhistory.table.ts
+│   └── userpoint.table.ts
+├── main.ts
+└── point
+    ├── point.controller.ts
+    ├── point.dto.ts
+    ├── point.model.ts
+    └── point.module.ts
 
 
 ## 엔티티와 모듈 구성
 엔티티:  데이터베이스의 테이블과 매핑되는 클래스 PointHistoryTable과 UserPointTable이 여기에 해당
 모듈: 애플리케이션의 구성 요소를 나누고 의존성을 관리하는 핵심 구성요소 database.module, point.module
 
-## 의존성 주입:
+## 의존성 주입
 객체가 필요로 하는 외부의 객체나 서비스를 직접 생성하지 않고 외부로부터 받아 사용하는 디자인 패턴, 객체간의 결합도를 낮춤, 코드재사용성업, 테스트 용이
 
 
