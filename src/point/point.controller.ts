@@ -5,6 +5,34 @@ import { PointHistoryTable } from "../database/pointhistory.table";
 import { PointBody as PointDto } from "./point.dto";
 import { NotFoundError } from "rxjs";
 
+class RequestQueue {
+    private queue: Function[] = [];
+    private processing = false;
+
+    async enqueue(task: Function) {
+        this.queue.push(task);
+        if (!this.processing) {
+            this.processing = true;
+            await this.processNext();
+        }
+    }
+
+    private async processNext() {
+        if (this.queue.length === 0) {
+            this.processing = false;
+            return;
+        }
+        const task = this.queue.shift();
+        await task();
+        await this.processNext();
+    }
+}
+
+// 각 유저 ID별로 큐 인스턴스를 관리하는 맵
+const userTaskQueues: { [userId: number]: RequestQueue } = {};
+
+
+
 
 @Controller('/point')
 export class PointController {
@@ -50,22 +78,39 @@ export class PointController {
         @Param('id') id,
         @Body(ValidationPipe) pointDto: PointDto,
     ): Promise<UserPoint> {
-        const userId = Number.parseInt(id)
-        const amount = pointDto.amount
-        if (amount<0) {
-            throw new BadRequestException(`Negetive number input not allowed`)
+        const userId = Number.parseInt(id);
+        if (!userTaskQueues[userId]) {
+            userTaskQueues[userId] = new RequestQueue();
         }
-        const userPoint = await this.userDb.selectById(userId)
-        if (!userPoint) {
-            throw new NotFoundException(`User ID ${userId} not found`)
-        }
-        const sumPoint = userPoint.point + amount
-        if (amount>=10000000) {
-            throw new BadRequestException(`Point number is too high`)
-        }
-        await this.userDb.insertOrUpdate(userId, sumPoint)
-        await this.historyDb.insert(userId, amount, TransactionType.CHARGE , Date.now())
-        return { id: userId, point: sumPoint, updateMillis: Date.now() }
+    
+        return new Promise((resolve, reject) => {
+            userTaskQueues[userId].enqueue(async () => {
+                try {
+                    const amount = pointDto.amount;
+                    if (amount < 0) {
+                        throw new BadRequestException(`Negative number input not allowed`);
+                    }
+    
+                    const userPoint = await this.userDb.selectById(userId);
+                    if (!userPoint) {
+                        throw new NotFoundException(`User ID ${userId} not found`);
+                    }
+    
+                    const sumPoint = userPoint.point + amount;
+                    if (amount >= 10000000) {
+                        throw new BadRequestException(`Point number is too high`);
+                    }
+    
+                    await this.userDb.insertOrUpdate(userId, sumPoint);
+                    await this.historyDb.insert(userId, amount, TransactionType.CHARGE, Date.now());
+    
+                    resolve({ id: userId, point: sumPoint, updateMillis: Date.now() });
+                } catch (error) {
+                    reject(error);
+                }
+            });
+        });
+    
     }
     /**
      * TODO - 특정 유저의 포인트를 사용하는 기능을 작성해주세요.
@@ -76,20 +121,36 @@ export class PointController {
         @Body(ValidationPipe) pointDto: PointDto,
     ): Promise<UserPoint> {
         const userId = Number.parseInt(id)
-        const amount = pointDto.amount
-        if (amount<0) {
-            throw new BadRequestException(`Negetive number input not allowed`)
+        if (!userTaskQueues[userId]) {
+            userTaskQueues[userId] = new RequestQueue();
         }
-        const userPoint = await this.userDb.selectById(userId)
-        if (!userPoint) {
-            throw new NotFoundException(`User ID ${userId} not found`)
-        }
-        let sumPoint = userPoint.point - amount
-        if (sumPoint<0) {
-            throw new BadRequestException(`Insufficient points`)
-        }
-        await this.userDb.insertOrUpdate(userId, sumPoint)
-        await this.historyDb.insert(userId, -amount, TransactionType.USE , Date.now())
-        return { id: userId, point: sumPoint, updateMillis: Date.now() }
+    
+        return new Promise((resolve, reject) => {
+            userTaskQueues[userId].enqueue(async () => {
+                try {
+                    const amount = pointDto.amount;
+                    if (amount < 0) {
+                        throw new BadRequestException(`Negative number input not allowed`);
+                    }
+    
+                    const userPoint = await this.userDb.selectById(userId);
+                    if (!userPoint) {
+                        throw new NotFoundException(`User ID ${userId} not found`);
+                    }
+    
+                    let sumPoint = userPoint.point - amount;
+                    if (sumPoint < 0) {
+                        throw new BadRequestException(`Insufficient points`);
+                    }
+    
+                    await this.userDb.insertOrUpdate(userId, sumPoint);
+                    await this.historyDb.insert(userId, -amount, TransactionType.USE, Date.now());
+    
+                    resolve({ id: userId, point: sumPoint, updateMillis: Date.now() });
+                } catch (error) {
+                    reject(error);
+                }
+            });
+        });
     }
 }

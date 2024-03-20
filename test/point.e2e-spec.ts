@@ -64,6 +64,61 @@ describe('PointController (e2e)', () => {
         .expect(400)
   })
 
+  it('/point/:id/charge (PATCH) - 동시 요청 처리', async() =>{
+    const initCharge = 1000
+    await request(app.getHttpServer())
+      .patch('/point/1/charge')
+      .send({ amount: initCharge })
+    // 10개의 리퀘스트를 프라미스를 리스트에 저장한 뒤 한꺼번에 푸시함
+    const requestNumbers = 10
+    const chargeAmount = 100
+    const collectedPromises = [] // 모든 요청을 배열에 저장
+    for (let i=0; i< requestNumbers;i++ ) {
+      const promise = request(app.getHttpServer())
+        .patch('/point/1/charge')
+        .send({amount: chargeAmount})
+        .expect(200)
+      collectedPromises.push(promise)
+    }
+    await Promise.all(collectedPromises)
+
+    return request(app.getHttpServer())
+      .get('/point/1')
+      .expect(200)
+      .then((res)=>{
+        expect(res.body.point).toBe(initCharge+requestNumbers*chargeAmount)
+      })
+  })
+
+  it('/point/:id/use (PATCH) - 동시 요청 처리', async() =>{
+    const initCharge = 1000
+    await request(app.getHttpServer())
+      .patch('/point/1/charge')
+      .send({ amount: initCharge })
+    // 10개의 리퀘스트를 프라미스를 리스트에 저장한 뒤 한꺼번에 푸시함
+    const requestNumbers = 10
+    const useAmount = 10
+    const collectedPromises = [] // 모든 요청을 배열에 저장
+    for (let i=0; i< requestNumbers;i++ ) {
+      const promise = request(app.getHttpServer())
+        .patch('/point/1/use')
+        .send({amount: useAmount})
+        .expect(200)
+      collectedPromises.push(promise)
+    }
+    await Promise.all(collectedPromises)
+
+    return request(app.getHttpServer())
+      .get('/point/1')
+      .expect(200)
+      .then((res)=>{
+        expect(res.body.point).toBe(initCharge - requestNumbers*useAmount)
+      })
+  })
+
+
+
+
   it('/point/:id/use (PATCH) - 인풋값이 음수인 경우 BadRequestException', () => {
     return request(app.getHttpServer())
         .patch('/point/1/use')
@@ -71,7 +126,7 @@ describe('PointController (e2e)', () => {
         .expect(400)
         .expect({ 
             statusCode: 400,
-            message: "Negetive number input not allowed",
+            message: "Negative number input not allowed",
             error: "Bad Request"
           })
   })
