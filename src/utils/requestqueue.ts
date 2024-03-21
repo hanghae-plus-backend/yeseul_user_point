@@ -1,24 +1,25 @@
 export class RequestQueue {
-    private queue:Function[] = [] //함수를 받는 배열
-    private processing = false
+    private queue: Array<() => Promise<any>> = [];
+    private processing = false;
 
-    async enqueue(task:Function) {
-        // 태스크를 queue에 넣어놓고 하나씩 실행
-        this.queue.push(task)
-        if (!this.processing) {
-            this.processing = true
-            await this.processNext()
-        }
+    async enqueue<T>(task: () => Promise<T>): Promise<T> {
+        return new Promise<T>((resolve, reject) => {
+            this.queue.push(() => task().then(resolve).catch(reject));
+            if (!this.processing) {
+                this.processing = true;
+                this.processNext();
+            }
+        });
     }
 
     private async processNext() {
-        // 리스트 내 다음 작업을 진행 길이가 0이면 process를 멈춘다 
-        if (this.queue.length ===0) {
-            this.processing = false
-            return
+        if (this.queue.length === 0) {
+            this.processing = false;
+            return;
         }
-        const task = this.queue.shift()
-        await task()
-        await this.processNext()
+        // queue에서 태스크를 꺼내 실행
+        const task = this.queue.shift();
+        await task(); 
+        this.processNext();
     }
 }

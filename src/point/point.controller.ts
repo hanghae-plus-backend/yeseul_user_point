@@ -21,13 +21,7 @@ export class PointController {
     async point(@Param('id') id): Promise<UserPoint> {
 
         const userId = Number.parseInt(id)
-        if (isNaN(userId)) {
-            throw new BadRequestException(`Invalid user ID: ${id}`);
-        }
-        const userPoint = await this.pointService.getPoint(userId)
-        if (!userPoint) {
-            throw new NotFoundException(`User Id ${userId} not found`)
-        }
+        const userPoint = this.pointService.getPoint(userId)
         return userPoint
     }
 
@@ -37,7 +31,7 @@ export class PointController {
     @Get(':id/histories')
     async history(@Param('id') id): Promise<PointHistory[]> {
         const userId = Number.parseInt(id)
-        const userHistory = await this.historyDb.selectAllByUserId(userId)
+        const userHistory = this.pointService.getAllHistory(userId)
         return userHistory
     }
 
@@ -66,36 +60,13 @@ export class PointController {
         @Body(ValidationPipe) pointDto: PointDto,
     ): Promise<UserPoint> {
         const userId = Number.parseInt(id)
-        if (!userTaskQueues[userId]) {
-            userTaskQueues[userId] = new RequestQueue();
+        if (isNaN(userId)) {
+            throw new BadRequestException(`Invalid user ID: ${id}`);
         }
-    
-        return new Promise((resolve, reject) => {
-            userTaskQueues[userId].enqueue(async () => {
-                try {
-                    const amount = pointDto.amount;
-                    if (amount < 0) {
-                        throw new BadRequestException(`Negative number input not allowed`);
-                    }
-    
-                    const userPoint = await this.userDb.selectById(userId);
-                    if (!userPoint) {
-                        throw new NotFoundException(`User ID ${userId} not found`);
-                    }
-    
-                    let sumPoint = userPoint.point - amount;
-                    if (sumPoint < 0) {
-                        throw new BadRequestException(`Insufficient points`);
-                    }
-    
-                    await this.userDb.insertOrUpdate(userId, sumPoint);
-                    await this.historyDb.insert(userId, -amount, TransactionType.USE, Date.now());
-    
-                    resolve({ id: userId, point: sumPoint, updateMillis: Date.now() });
-                } catch (error) {
-                    reject(error);
-                }
-            });
-        });
+        if (pointDto.amount < 0) {
+            throw new BadRequestException(`Negative number input not allowed`);
+        }
+        return await this.pointService.usePoint(userId, pointDto.amount);
+ 
     }
 }

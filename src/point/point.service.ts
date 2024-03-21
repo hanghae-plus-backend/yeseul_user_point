@@ -32,7 +32,21 @@ export class PointService {
   }
 
   async getPoint(userId:number):Promise<UserPoint> {
-    return this.userDb.selectById(userId)
+    if (isNaN(userId)) {
+      throw new BadRequestException(`Invalid user ID: ${userId}`);
+    }
+    const userPoint = await this.userDb.selectById(userId)
+    if (!userPoint) {
+      throw new NotFoundException(`User Id ${userId} not found`)
+    }
+    return userPoint
+  }
+
+  async getAllHistory(userId:number):Promise<PointHistory[]> {
+    if (isNaN(userId)) {
+      throw new BadRequestException(`Invalid user ID: ${userId}`);
+    }
+    return await this.historyDb.selectAllByUserId(userId)
   }
 
   private async performCharge(userId: number, amount: number): Promise<UserPoint> {
