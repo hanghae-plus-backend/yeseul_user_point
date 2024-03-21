@@ -1,20 +1,22 @@
 ## 디렉토리 구조
 src    
 ├── app.controller.spec.ts   
-├── app.controller.ts    
-├── app.module.ts  
-├── app.service.ts  
-├── database  
-│   ├── database.module.ts  
-│   ├── pointhistory.table.ts  
-│   └── userpoint.table.ts  
-├── main.ts  
-└── point  
-    ├── point.controller.ts  
-    ├── point.dto.ts  
-    ├── point.model.ts  
-    └── point.module.ts  
-
+├── app.controller.ts   
+├── app.module.ts   
+├── app.service.ts   
+├── database   
+│   ├── database.module.ts   
+│   ├── pointhistory.table.ts   
+│   └── userpoint.table.ts   
+├── main.ts   
+├── point   
+│   ├── point.controller.ts   
+│   ├── point.dto.ts   
+│   ├── point.model.ts   
+│   ├── point.module.ts   
+│   └── point.service.ts   
+└── utils   
+    └── requestqueue.ts   
 
 ## 엔티티와 모듈 구성
 엔티티:  데이터베이스의 테이블과 매핑되는 클래스 PointHistoryTable과 UserPointTable이 여기에 해당
